@@ -3,39 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⛷️ 家族日本滑雪觀光行程</title>
+    <title>✈️ 家族日本滑雪觀光行程</title>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Hide scrollbar for clean UI */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Smooth expand/collapse, increased max-height to prevent cutting off long lists */
+        .expand-transition { transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
+    </style>
 </head>
-<body class="bg-blue-50 p-6">
-    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
-        <h1 class="text-3xl font-extrabold text-blue-700 mb-6 text-center">🇯🇵 日本滑雪之旅</h1>
-        <div class="bg-blue-100 p-4 rounded-lg mb-4">
-            <p class="font-bold text-blue-800 text-center">🎉 恭喜！網頁已成功連線！</p>
-        </div>
-        <ul class="space-y-4">
-            <li class="flex items-center space-x-3">
-                <span class="text-2xl">🏨</span>
-                <div>
-                    <p class="font-bold">第一天：抵達飯店</p>
-                    <p class="text-sm text-gray-500">機場專車接送至雪場</p>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- 完整行程資料庫 ---
+        // 加入 type: 'transport' 來標記交通卡片
+        // 在 details 中加入 location 來讓子項目可以連動地圖
+        const itineraryData = [
+            {
+                id: 1, day: "第一天", date: "2/27 (五)", title: "✈️ 啟程與東京日常", mapQuery: "Oshiage Station, Tokyo",
+                events: [
+                    { time: "12:20", title: "抵達桃園機場 (第二航廈)", location: "Taoyuan International Airport Terminal 2", icon: "✈️", type: "transport",
+                      details: [
+                        { text: "領取實體 SIM 卡。", pay: ["已購買"] },
+                        { text: "將 10000 日幣大鈔換成數張 1000 日幣（方便買車票與小店使用）。" }
+                      ]
+                    },
+                    { time: "15:20 - 19:20", title: "搭乘長榮航空 (BR196)", location: "Narita International Airport", icon: "✈️", type: "transport", transport: "航程約 4 小時", details: [{ text: "飛機上享用晚餐。" }] },
+                    { time: "19:20", title: "降落日本成田機場 (T1)", location: "Narita Airport Terminal 1", icon: "🛬",
+                      details: [
+                        { text: "快速通關：走標示「Visit Japan Web」或「Smart Customs」的專用通道。" },
+                        { text: "購買 西瓜卡 Suica。每人約儲值 3000 日幣即可涵蓋車資。", pay: ["現金", "信用卡"] }
+                      ]
+                    },
+                    { time: "20:20", title: "搭乘京成電鐵 Sky Access 線", location: "Keisei Narita Airport Terminal 1 Station", icon: "🚆", type: "transport", transport: "往羽田/西馬込方向，車程約 60 分鐘",
+                      details: [{ text: "時間為預估，班次密集，若錯過搭下一班即可。可使用西瓜卡直接進站。", pay: ["西瓜卡", "現金"] }]
+                    },
+                    { time: "21:30 - 21:50", title: "抵達押上站", location: "Oshiage Station", icon: "📍", details: [] },
+                    { time: "22:00", title: "前往飯店 - スマイルステイ押上", location: "Smile Stay Oshiage", icon: "🏨", transport: "步行約 5 分鐘",
+                      details: [
+                        { text: "沿途可欣賞夜晚的晴空塔。" },
+                        { text: "辦理無人入住手續、放行李。" }
+                      ]
+                    },
+                    { time: "22:45", title: "LIFE 超市押上駅前店 採買", location: "LIFE Oshiage", icon: "🛒",
+                      details: [
+                        { text: "營業至 24:00。可以買些隔天早餐、宵夜或當季水果、牛奶。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "LIFE Oshiage" },
+                        { text: "備選方案：若太累，飯店附近有全家/7-11，或車站旁的松屋吃熱宵夜。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "Matsuya Oshiage" }
+                      ]
+                    }
+                ]
+            },
+            {
+                id: 2, day: "第二天", date: "2/28 (六)", title: "🎡 淺草觀光與前進雪國", mapQuery: "Senso-ji, Tokyo",
+                events: [
+                    { time: "08:00 - 08:30", title: "起床與 Checkout", location: "Smile Stay Oshiage", icon: "🛏️", details: [] },
+                    { time: "08:45", title: "前往淺草", location: "Asakusa Station", icon: "🚆", type: "transport", transport: "都營淺草線 / 東武晴空塔線，車程約 3~5 分鐘", details: [{ pay: ["西瓜卡", "現金"] }] },
+                    { time: "09:00", title: "淺草站寄放行李", location: "Asakusa Station", icon: "🧳", details: [{ text: "尋找大型置物櫃 (註：許多新型置物櫃僅支援西瓜卡)", pay: ["西瓜卡", "現金"] }] },
+                    { time: "09:15 - 12:30", title: "淺草/上野 彈性觀光與午餐", location: "Senso-ji", icon: "⛩️",
+                      details: [
+                        { text: "必去景點：雷門大燈籠、仲見世商店街、淺草寺正殿。" },
+                        { text: "⚠️ 注意：淺草嚴禁邊走邊吃，請在店家指定區域吃完再走。" },
+                        { text: "淺草炸肉餅 (浅草メンチ)", price: "¥350/個", wait: "5-15 分", pay: ["現金", "PayPay"], location: "浅草メンチ" },
+                        { text: "淺草吉備糰子 (あづま)", price: "¥400/5支", wait: "5-10 分", pay: ["現金", "PayPay"], location: "浅草きびだんご あづま" },
+                        { text: "淺草絲滑布丁 (浅草シルクプリン)", price: "¥400-600/個", wait: "免排隊", pay: ["現金", "PayPay", "西瓜卡", "信用卡"], location: "浅草シルクプリン" },
+                        { text: "淺草花月堂 (巨無霸菠蘿麵包)", price: "¥300/個", wait: "5-10 分", pay: ["現金", "PayPay", "西瓜卡"], location: "浅草花月堂 本店" },
+                        { text: "銅鑼燒 龜十 (亀十)", price: "¥400/個", wait: "30-60+ 分 (每日限量)", pay: ["現金", "PayPay"], location: "亀十 浅草" },
+                        { text: "地瓜羊羹 舟和 本店", price: "¥150-500/份", wait: "5-15 分", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "舟和 本店" },
+                        { text: "壽々喜園 抹茶冰淇淋 (世界最濃)", price: "¥400-700/杯", wait: "15-30 分", pay: ["現金", "PayPay"], location: "壽々喜園 浅草本店" },
+                        { text: "禦好燒 鐵板燒 淺草鶴二郎", price: "¥1000-2000/人", wait: "30-60 分 (需內用)", pay: ["現金", "信用卡", "PayPay"], location: "浅草つる次郎" },
+                        { text: "【午餐備選 (淺草區)】", isSubtitle: true },
+                        { text: "鐵板漢堡排 モンブラン", price: "¥1000-1500/人", wait: "20-40 分", pay: ["現金", "信用卡", "PayPay"], location: "モンブラン 浅草店" },
+                        { text: "天婦羅 大黑家 本店 (老店)", price: "¥2000-3000/人", wait: "30-60 分", pay: ["現金", "信用卡"], location: "大黒家天麩羅 本店" },
+                        { text: "BRISKSTAND ASAKUSA 漢堡", price: "¥1500-2500/人", wait: "20-40 分", pay: ["現金", "信用卡", "PayPay"], location: "BRISKSTAND ASAKUSA" },
+                        { text: "淺草名代拉麵 与ろゐ屋", price: "¥900-1200/人", wait: "15-30 分", pay: ["現金", "PayPay"], location: "浅草名代らーめん 与ろゐ屋" },
+                        { text: "泥鰍鍋 駒形どぜう (200年老店)", price: "¥3000-5000/人", wait: "15-30 分", pay: ["現金", "信用卡", "西瓜卡"], location: "駒形どぜう 本店" },
+                        { text: "淺草炸牛排 (浅草牛かつ) ⚠️ 極度熱門，小心錯過車", price: "¥1500-2500/人", wait: "1-2 小時", pay: ["現金", "信用卡", "PayPay"], location: "浅草牛かつ" },
+                        { text: "【午餐備選 (上野區)】", isSubtitle: true },
+                        { text: "Nadai Unatoto 鰻魚飯", price: "¥590-1100/人", wait: "15-30 分", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "名代 宇奈とと 上野店" },
+                        { text: "肉の大山 上野店 (阿美橫町名店)", price: "約¥1000/人", wait: "15-30 分", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "肉の大山 上野店" }
+                      ]
+                    },
+                    { time: "12:30 - 13:00", title: "UNIQLO 淺草店 快速採買", location: "UNIQLO Asakusa", icon: "👕",
+                      details: [
+                        { text: "淺草的 UNIQLO 早上 10:00 才開門，安排在午餐後、搭車離開淺草前來逛剛剛好！" },
+                        { text: "可以購買發熱衣、輕量羽絨外套等滑雪內搭實用衣物。", pay: ["信用卡", "現金", "PayPay"], location: "UNIQLO Asakusa" }
+                      ]
+                    },
+                    { time: "13:00", title: "領行李前往上野站", location: "Ueno Station", icon: "🚆", type: "transport", transport: "東京地鐵銀座線，車程約 5 分鐘", details: [{ pay: ["西瓜卡", "現金"] }] },
+                    { time: "13:10 - 14:20", title: "上野車站周邊空檔小逛", location: "Ameyoko Shopping Street", icon: "🚶",
+                      details: [
+                        { text: "推薦：阿美橫町 (較順路)。轉乘動線上，極近車站，適合快速感受熱鬧氛圍或吃小吃。", pay: ["現金", "PayPay"], location: "Ameyoko Shopping Street" },
+                        { text: "備選：上野恩賜公園。若想避開人潮，去公園入口處走走即可。", location: "Ueno Park" }
+                      ]
+                    },
+                    { time: "14:46 - 15:56", title: "搭乘 JR 上越新幹線", location: "Echigo-Yuzawa Station", icon: "🚄", type: "transport", transport: "上野 往 越後湯澤，車程約 1時10分", details: [{ text: "抵達湯澤車站！感受溫度的變化。", pay: ["已購買"] }] },
+                    { time: "16:00 - 18:20", title: "越後湯澤車站周邊採買與晚餐", location: "CoCoLo Yuzawa", icon: "🍶",
+                      details: [
+                        { text: "Noguchi 超市：採買明後兩天在雪場晚上的食材與零食 (至21:00)。", pay: ["現金", "信用卡", "PayPay"], location: "ショッピングセンターのぐち 湯沢ハーツ店" },
+                        { text: "清酒博物館：站內，500日圓換5枚代幣試飲清酒 (至19:00，最後入場18:45)。", pay: ["現金", "信用卡", "西瓜卡"], location: "Ponshukan Echigo-Yuzawa" },
+                        { text: "晚餐 - 中野屋 (蕎麥麵) ⚠️ 若排隊超過10組請果斷放棄！", pay: ["現金", "信用卡", "PayPay"], location: "中野屋 湯沢本店" },
+                        { text: "【晚餐備選 (翻桌快或在站內)】", isSubtitle: true },
+                        { text: "小嶋屋 越後湯澤店 (站內)：布海苔蕎麥麵名店，上餐速度算快。", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "小嶋屋 越後湯沢店" },
+                        { text: "天地豐作 (站內)：新潟名物「越後糯米豬」蓋飯。不想吃麵的好選擇，上菜快份量足。", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "天地豊作 越後湯沢" },
+                        { text: "越後つけ麺 維新 (東口站外3分)：米穀粉製作的Q彈麵條，拉麵店翻桌率通常極快。", pay: ["現金", "PayPay"], location: "越後つけ麺 維新 湯沢本店" },
+                        { text: "雪ん洞 爆彈飯糰 (站內)：終極趕車備案！頂級越光米現捏巨無霸飯糰，買回候車室吃。", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "雪ん洞 越後湯沢" }
+                      ]
+                    },
+                    { time: "18:40", title: "搭乘南越後觀光巴士 (普通車)", location: "Echigo-Yuzawa Station", icon: "🚌", type: "transport", transport: "往「苗場」方向，車程約 18 分鐘",
+                      details: [{ text: "⚠️ 關鍵時間，不可錯過。根據時刻表，這班車有停靠「かぐら三俣スキー場」。(上車可抽整理券，強烈建議備妥現金硬幣)", pay: ["現金", "西瓜卡"] }]
+                    },
+                    { time: "18:58", title: "「かぐら三俣スキー場」站下車", location: "Kagura Mitsumata Ski Resort", icon: "📍", details: [] },
+                    { time: "19:10", title: "抵達神樂白馬旅館", location: "Kagura Mitsumata Ski Resort", icon: "🏨",
+                      details: [{ text: "買雪票、租雪具、將食材放入冰箱。早點休息準備明日體力活。", pay: ["現金"] }]
+                    }
+                ]
+            },
+            {
+                id: 3, day: "第三天", date: "3/1 (日)", title: "🎿 雪場特訓與溫泉", mapQuery: "Kagura Ski Resort",
+                events: [
+                    { time: "08:00 - 08:20", title: "起床與早餐", location: "Kagura Mitsumata Ski Resort", icon: "🍳", details: [{ text: "吃飽一點，滑雪很耗體力" }] },
+                    { time: "08:50", title: "步行至三俁纜車站", location: "Mitsumata Ropeway", icon: "🚶", type: "transport", transport: "步行約 5 分鐘", details: [] },
+                    { time: "09:00 - 12:00", title: "上午滑雪課程", location: "Kagura Ski Resort", icon: "🏂", details: [{ text: "與教練集合", pay: ["訂金已付，尾款轉帳"] }] },
+                    { time: "12:00 - 13:00", title: "雪場午餐彈性選擇", location: "Wada Goya Kagura", icon: "🍛",
+                      details: [
+                        { text: "和田小屋：體驗山中小屋氛圍，咖哩飯最受歡迎。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "Wada Goya Kagura" },
+                        { text: "三俁餐廳 / SNOWMAN：漢堡排、拉麵等熱食，補充熱量。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "Kagura Mitsumata Restaurant" }
+                      ]
+                    },
+                    { time: "13:00 - 15:00", title: "下午滑雪課程", location: "Kagura Ski Resort", icon: "🏂", details: [] },
+                    { time: "15:00 - 16:30", title: "自由滑雪或休息", location: "Kagura Ski Resort", icon: "☕", details: [] },
+                    { time: "17:00", title: "離開雪場", location: "Mitsumata Ropeway", icon: "🚠", type: "transport", details: [{ text: "假日雪場通常 17:00 關閉" }] },
+                    { time: "晚上", title: "泡溫泉 (街道之湯)", location: "Kaido no Yu Niigata", icon: "♨️",
+                      details: [
+                        { text: "就在三俁地區，走路可達。營業至 21:00 (最後入場 20:30)。", pay: ["現金"], location: "Kaido no Yu Niigata" },
+                        { text: "註：通常為自動售票機，準備好零錢與千元鈔。泡完湯回民宿煮火鍋/吃超市晚餐。" }
+                      ]
+                    }
+                ]
+            },
+            {
+                id: 4, day: "第四天", date: "3/2 (一)", title: "🎿 自由滑行與探索", mapQuery: "Kagura Ski Resort",
+                events: [
+                    { time: "08:00 - 08:20", title: "起床與早餐", location: "Kagura Mitsumata Ski Resort", icon: "🍳", details: [] },
+                    { time: "09:00 - 12:00", title: "滑雪 (自由練習)", location: "Kagura Ski Resort", icon: "🏂", details: [{ text: "今日無教練，可根據自身程度選擇平緩雪道多加練習。" }] },
+                    { time: "12:00 - 13:00", title: "午餐", location: "Kagura Ski Resort", icon: "🍛", details: [{ text: "換一間昨天沒吃過的雪場餐廳", pay: ["現金", "信用卡", "PayPay", "西瓜卡"] }] },
+                    { time: "13:00 - 16:00", title: "滑雪 (最後的高山雪景)", location: "Kagura Ski Resort", icon: "🏂", details: [] },
+                    { time: "16:30", title: "離開雪場", location: "Mitsumata Ropeway", icon: "🚠", type: "transport", details: [{ text: "⚠️ 平日雪場較早關閉，通常為 16:30" }] },
+                    { time: "晚上", title: "泡溫泉 (街道之湯)", location: "Kaido no Yu Niigata", icon: "♨️", details: [{ text: "把握最後一晚的雪國溫泉 (明天週二溫泉公休)。", pay: ["現金"] }] }
+                ]
+            },
+            {
+                id: 5, day: "第五天", date: "3/3 (二)", title: "🎿 重返都會下北澤", mapQuery: "Shimokitazawa Station",
+                events: [
+                    { time: "08:00 - 08:20", title: "起床與早餐", location: "Kagura Mitsumata Ski Resort", icon: "🍳", details: [] },
+                    { time: "09:00 - 13:30", title: "最後的滑雪時光", location: "Kagura Ski Resort", icon: "🏂", details: [] },
+                    { time: "13:30 - 14:30", title: "退還雪具、回民宿拿行李", location: "Kagura Mitsumata Ski Resort", icon: "🧳", details: [] },
+                    { time: "15:04", title: "搭乘南越後觀光巴士 (急行)", location: "Kagura Mitsumata Ski Resort", icon: "🚌", type: "transport", transport: "往越後湯澤車站，車程約 21 分鐘", details: [{ text: "⚠️ 關鍵時間", pay: ["現金", "西瓜卡"] }] },
+                    { time: "15:25", title: "抵達越後湯澤車站", location: "Echigo-Yuzawa Station", icon: "📍",
+                      details: [
+                        { text: "買爆彈飯糰 (如果在車上會餓的話)。", pay: ["現金", "信用卡", "西瓜卡", "PayPay"], location: "雪ん洞 越後湯沢" },
+                        { text: "逛松本清藥妝店 (車站內 CoCoLo 裡面)。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "Matsumoto Kiyoshi Echigo-Yuzawa" }
+                      ]
+                    },
+                    { time: "16:00", title: "搭乘 JR 上越新幹線", location: "Echigo-Yuzawa Station", icon: "🚄", type: "transport", transport: "越後湯澤 往 東京，車程約 1時20分", details: [{ pay: ["已購買"] }] },
+                    { time: "17:20 - 18:15", title: "東京車站 轉乘至 下北澤站", location: "Tokyo Station", icon: "🚆", type: "transport", transport: "總交通含步行約需 40~50 分鐘",
+                      details: [
+                        { text: "17:20 抵達東京車站後，於站內步行尋找「中央線」月台。" },
+                        { text: "搭乘 JR 中央線快速 (往新宿/高尾方向) 至 新宿站 (車程約 14 分鐘)。" },
+                        { text: "於新宿站出 JR 站閘門，換乘 小田急線 (急行/各停皆可) 至 下北澤站 (車程約 8~11 分鐘)。" },
+                        { text: "18:15 抵達下北澤站。", pay: ["西瓜卡", "現金"] }
+                      ]
+                    },
+                    { time: "18:30", title: "前往住宿 - Mari 的家", location: "Shimokitazawa", icon: "🏨", details: [] },
+                    { time: "19:30", title: "下北澤晚餐與逛街", location: "Yakiniku Futago Shimokitazawa", icon: "🍽️",
+                      details: [
+                        { text: "下北澤以古著、黑膠聞名。今晚時間充裕，適合全家吃大餐慰勞滑雪辛勞！" },
+                        { text: "【晚餐首選 (人氣燒肉)】", isSubtitle: true },
+                        { text: "大阪烤肉・荷爾蒙 二子 (下北澤店)：桌邊代烤，必點「滿出來的牛小排」。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "大阪焼肉・ホルモン ふたご 下北沢店" },
+                        { text: "炭火燒肉 ホルモン劇場 den：黑毛和牛，排煙佳座位寬敞，適合家庭。", pay: ["現金", "信用卡", "PayPay"], location: "炭火焼肉 ホルモン劇場 den" },
+                        { text: "燒肉屋 YAZAWA：高 CP 值嚴選黑毛和牛，肉質鮮甜份量足。", pay: ["現金", "信用卡", "PayPay"], location: "焼肉屋 YAZAWA 下北沢店" },
+                        { text: "【晚餐備選 (若不想吃燒肉)】", isSubtitle: true },
+                        { text: "Rojiura Curry SAMURAI：知名北海道湯咖哩，蔬菜滿滿。", pay: ["現金", "信用卡", "PayPay"], location: "Rojiura Curry SAMURAI. 下北沢店" },
+                        { text: "Shirube (汁べゑ) 下北澤店：隱蔽居酒屋，炙燒鯖魚必點 (可能需預約)。", pay: ["現金", "信用卡", "PayPay"], location: "汁べゑ 下北沢店" }
+                      ]
+                    }
+                ]
+            },
+            {
+                id: 6, day: "第六天", date: "3/4 (三)", title: "🛍️ 澀谷血拚與滿載而歸", mapQuery: "Shibuya Station",
+                events: [
+                    { time: "08:00 - 08:30", title: "起床與 Checkout", location: "Shimokitazawa", icon: "🛏️", details: [] },
+                    { time: "09:00", title: "前往澀谷", location: "Shibuya Station", icon: "🚆", type: "transport", transport: "京王井之頭線，急行約4分，各停約6分", details: [{ pay: ["西瓜卡", "現金"] }] },
+                    { time: "09:10", title: "抵達澀谷車站，尋找置物櫃", location: "Shibuya Station", icon: "🧳", details: [{ text: "澀谷主要是購物行程，可以考慮帶著行李箱逛", pay: ["西瓜卡", "現金"] }] },
+                    { time: "09:20 - 10:00", title: "🌞 晨間打卡與24H爆買", location: "Shibuya Scramble Crossing", icon: "📸",
+                      details: [
+                        { text: "澀谷十字路口、忠犬八公像：趁早上人潮還沒擠爆前拍照。", location: "Shibuya Scramble Crossing" },
+                        { text: "MEGA 唐吉訶德 澀谷本店 (24H)：主打免稅零食、藥妝。必買特殊口味 KitKat、面膜。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"], location: "MEGA Don Quijote Shibuya" }
+                      ]
+                    },
+                    { time: "10:00 - 11:00", title: "🕙 搶購熱門伴手禮與電器", location: "Shibuya Scramble Square", icon: "🛍️",
+                      details: [
+                        { text: "SHIBUYA SKY：無死角俯瞰東京。(極熱門，強烈建議提早線上購票)", pay: ["線上購票", "信用卡", "PayPay"], location: "SHIBUYA SKY" },
+                        { text: "澀谷 Scramble Square 1F 艾許奶油餅乾：鐵盒奶油餅乾極易完售，10點開門要衝。", pay: ["信用卡", "西瓜卡", "現金"], location: "ÉCHIRÉ PÂTISSERIE AU BEURRE Shibuya" },
+                        { text: "澀谷 Scramble Square 10F Hands (原台隆)：文具、居家小物。", pay: ["信用卡", "西瓜卡", "現金"], location: "Hands Shibuya Scramble Square" },
+                        { text: "Bic Camera / LABI 澀谷：Panasonic 吹風機、保溫瓶、鋼彈模型。", pay: ["信用卡", "現金", "PayPay", "西瓜卡"], location: "Bic Camera Shibuya Hachikoguchi" },
+                        { text: "Mont-bell 澀谷店 (10:30開門)：高CP值機能服飾。必買 GORE-TEX 外套、超輕量折疊傘。", pay: ["信用卡", "現金", "PayPay", "西瓜卡"], location: "Mont-bell Shibuya" },
+                        { text: "西武百貨 (SEIBU)：專櫃美妝、精品、B1高級伴手禮。", pay: ["信用卡", "現金", "PayPay"], location: "Seibu Shibuya" }
+                      ]
+                    },
+                    { time: "11:00 - 12:15", title: "🕚 次文化、文青雜貨", location: "Shibuya PARCO", icon: "🧸",
+                      details: [
+                        { text: "⚠️ 距離搭車僅剩1小時多，請挑重點逛" },
+                        { text: "澀谷 PARCO (6F)：任天堂旗艦店、寶可夢中心、JUMP SHOP。", pay: ["信用卡", "現金", "PayPay", "西瓜卡"], location: "Nintendo TOKYO" },
+                        { text: "澀谷 Loft：旗艦級文青雜貨、精美手帳本、富士山杯。", pay: ["信用卡", "現金", "PayPay", "西瓜卡"], location: "Shibuya Loft" },
+                        { text: "宮下公園：頂樓與哆啦A夢合照，或 1F 澀谷橫丁感受氣氛。", pay: ["依店鋪不同"], location: "MIYASHITA PARK" },
+                        { text: "澀谷 Hikarie：11F 有免費 Sky Lobby 觀景台看十字路口。", pay: ["信用卡", "現金", "西瓜卡"], location: "Shibuya Hikarie" }
+                      ]
+                    },
+                    { time: "11:45 - 12:30", title: "🕛 極速午餐或外帶車上吃", location: "Shibuya Station", icon: "🍱",
+                      details: [
+                        { text: "【方案 A (連鎖快餐)】", isSubtitle: true },
+                        { text: "Shake Shack 漢堡：出餐快。", pay: ["信用卡", "現金", "PayPay", "西瓜卡"], location: "Shake Shack Shibuya" },
+                        { text: "松屋 / 吉野家 / すき家：點餐到吃完只要 15-20 分鐘。", pay: ["西瓜卡", "現金", "PayPay"], location: "Matsuya Shibuya" },
+                        { text: "一蘭 / 阿夫利 AFURI：⚠️ 若排隊超過 10 分鐘請果斷放棄。", pay: ["現金", "西瓜卡", "信用卡"], location: "Ichiran Shibuya" },
+                        { text: "【方案 B (極度推薦：買便當上車吃)】", isSubtitle: true },
+                        { text: "把時間留給逛街！在 Scramble Square B2 或便利商店買日式鐵路便當 (駅弁)、豬排三明治，帶到 N'EX 享用。", pay: ["信用卡", "現金", "西瓜卡", "PayPay"], location: "Shibuya Scramble Square" }
+                      ]
+                    },
+                    { time: "12:30", title: "領取行李，前往 JR 月台", location: "Shibuya Station", icon: "🧳", details: [] },
+                    { time: "12:46", title: "搭乘 JR 成田特快 N'EX", location: "Shibuya Station", icon: "🚆", type: "transport", transport: "前往機場，車程約 1時14分", details: [{ text: "⚠️ 關鍵時間", pay: ["已購買"] }] },
+                    { time: "14:00", title: "抵達成田機場第一航廈 T1", location: "Narita Airport Terminal 1", icon: "📍", type: "transport",
+                      details: [
+                        { text: "辦理報到、托運行李、安檢。" },
+                        { text: "入關後做最後的免稅店採購（Tokyo Banana、Royce等）。", pay: ["現金", "信用卡", "PayPay", "西瓜卡"] }
+                      ]
+                    },
+                    { time: "16:15 - 19:20", title: "搭機返台 (BR1197)", location: "Taoyuan International Airport", icon: "✈️", type: "transport", details: [{ text: "平安抵達桃園機場，結束美好的家族旅程！" }] }
+                ]
+            }
+        ];
+
+        // --- 輔助 UI 元件 ---
+        const Badge = ({ type, text }) => {
+            const styles = {
+                '信用卡': 'bg-blue-100 text-blue-800 border-blue-200',
+                '現金': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                '西瓜卡': 'bg-teal-100 text-teal-800 border-teal-200',
+                'PayPay': 'bg-rose-100 text-rose-800 border-rose-200',
+                '已購買': 'bg-purple-100 text-purple-800 border-purple-200',
+                '線上購票': 'bg-indigo-100 text-indigo-800 border-indigo-200'
+            };
+            const defaultStyle = 'bg-gray-100 text-gray-800 border-gray-200';
+            const matchedStyle = styles[text] || defaultStyle;
+
+            return (
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${matchedStyle} mr-1 mb-1 whitespace-nowrap shadow-sm`}>
+                    {type === 'pay' && <span className="mr-1">💳</span>}
+                    {text}
+                </span>
+            );
+        };
+
+        const DetailItem = ({ item, isSelectedMapLocation, onLocationClick }) => {
+            if (item.isSubtitle) {
+                return <li className="mt-4 mb-1 font-bold text-slate-700 text-sm border-b pb-1 border-slate-200">{item.text}</li>;
+            }
+            
+            // 若該子項目有地點，渲染成可點擊的樣式
+            const isClickable = !!item.location;
+            const cardClasses = `mb-2 text-sm leading-relaxed p-3 rounded-lg shadow-sm border transition-colors ${
+                isClickable ? 'cursor-pointer hover:border-blue-300 hover:shadow-md' : ''
+            } ${
+                isSelectedMapLocation ? 'bg-blue-50/70 border-blue-400 ring-1 ring-blue-200' : 'bg-white border-slate-100'
+            }`;
+
+            return (
+                <li 
+                    className={cardClasses}
+                    onClick={() => isClickable && onLocationClick(item.location)}
+                >
+                    <div className="flex items-start justify-between">
+                        <div className={`font-medium ${isSelectedMapLocation ? 'text-blue-800' : 'text-slate-800'}`}>
+                            {item.text}
+                        </div>
+                        {isClickable && (
+                            <div className="ml-2 text-blue-500 text-lg flex-shrink-0" title="點擊查看地圖">
+                                📍
+                            </div>
+                        )}
+                    </div>
+                    {(item.price || item.wait || item.pay) && (
+                        <div className="mt-2 flex flex-wrap gap-y-2 items-center text-xs">
+                            {item.price && <span className="mr-3 font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">💰 {item.price}</span>}
+                            {item.wait && <span className="mr-3 font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded">⏳ {item.wait}</span>}
+                            {item.pay && <div className="flex flex-wrap">{item.pay.map(p => <Badge key={p} type="pay" text={p} />)}</div>}
+                        </div>
+                    )}
+                </li>
+            );
+        };
+
+        // --- 主程式 ---
+        const App = () => {
+            const [activeDayIdx, setActiveDayIdx] = React.useState(0);
+            const [expandedEventIdx, setExpandedEventIdx] = React.useState(null);
+            // 新增：儲存被點擊的「子項目地點」
+            const [activeSubLocation, setActiveSubLocation] = React.useState(null);
+
+            const activeDay = itineraryData[activeDayIdx];
+            
+            // 地圖搜尋字串邏輯優先順序：1. 子項目地點 -> 2. 主行程地點 -> 3. 當天大區域
+            const currentMapQuery = activeSubLocation 
+                ? activeSubLocation
+                : (expandedEventIdx !== null ? activeDay.events[expandedEventIdx].location : activeDay.mapQuery);
+
+            // 地圖 URL
+            const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(currentMapQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+
+            const handleDayChange = (idx) => {
+                setActiveDayIdx(idx);
+                setExpandedEventIdx(null);
+                setActiveSubLocation(null); // 切換天數時重置地圖子項目
+            };
+
+            const toggleEvent = (idx) => {
+                setExpandedEventIdx(prev => prev === idx ? null : idx);
+                setActiveSubLocation(null); // 開關主項目時，重置子項目地圖，退回主地點
+            };
+
+            return (
+                <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-10 shadow-xl relative">
+                    {/* Header: 已移除標題，只保留天數按鈕 */}
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm pt-2">
+                        {/* Day Tabs */}
+                        <div className="flex overflow-x-auto no-scrollbar px-2 pb-3 snap-x">
+                            {itineraryData.map((day, idx) => (
+                                <button 
+                                    key={day.id}
+                                    onClick={() => handleDayChange(idx)}
+                                    className={`snap-start whitespace-nowrap px-4 py-2 mx-1 rounded-full text-sm font-semibold transition-colors duration-200 ease-in-out ${
+                                        activeDayIdx === idx 
+                                        ? 'bg-blue-600 text-white shadow-md' 
+                                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    {day.date}
+                                </button>
+                            ))}
+                        </div>
+                    </header>
+
+                    {/* Google Map Area */}
+                    <div className="sticky top-[52px] z-10 w-full bg-slate-200 border-b border-slate-300 shadow-inner" style={{ height: '30vh' }}>
+                        <iframe 
+                            width="100%" 
+                            height="100%" 
+                            frameBorder="0" 
+                            scrolling="no" 
+                            marginHeight="0" 
+                            marginWidth="0" 
+                            src={mapUrl}
+                            className="w-full h-full"
+                            title="Google Map View"
+                        ></iframe>
+                        {/* Map Overlay Indicator */}
+                        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 shadow-sm border border-slate-200 pointer-events-none max-w-[80%] truncate">
+                            📍 {currentMapQuery.split(',')[0]}
+                        </div>
+                    </div>
+
+                    {/* Itinerary List */}
+                    <div className="px-4 py-5">
+                        <div className="mb-4">
+                            <h2 className="text-xl font-extrabold text-slate-800">{activeDay.day}</h2>
+                            <p className="text-sm font-medium text-blue-600 mt-1">{activeDay.title}</p>
+                        </div>
+
+                        <div className="relative border-l-2 border-blue-200 ml-3 pl-5 space-y-6">
+                            {activeDay.events.map((event, idx) => {
+                                const isExpanded = expandedEventIdx === idx;
+                                const hasDetails = event.details && event.details.length > 0;
+                                const isTransport = event.type === 'transport'; // 判斷是否為交通卡片
+
+                                // 針對交通卡片調整基礎樣式
+                                const baseCardBg = isTransport ? 'bg-blue-50' : 'bg-white';
+                                const baseCardBorder = isTransport ? 'border-blue-400 border-2' : 'border-slate-200 border';
+                                
+                                // 展開時的強調樣式
+                                const expandedBorder = isTransport 
+                                    ? 'border-blue-500 ring-2 ring-blue-300' 
+                                    : 'border-blue-400 ring-1 ring-blue-100';
+
+                                return (
+                                    <div key={idx} className="relative">
+                                        {/* Timeline Dot */}
+                                        <div className={`absolute -left-[29px] w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm border-2 ${
+                                            isExpanded 
+                                            ? 'bg-blue-600 border-white text-white' 
+                                            : (isTransport ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-white border-blue-200 text-blue-500')
+                                        }`}>
+                                            {event.icon}
+                                        </div>
+
+                                        {/* Event Card */}
+                                        <div 
+                                            className={`${baseCardBg} rounded-xl shadow-sm transition-all duration-200 ${
+                                                isExpanded 
+                                                ? expandedBorder 
+                                                : `${baseCardBorder} cursor-pointer hover:border-blue-300`
+                                            }`}
+                                        >
+                                            {/* Card Header (Always visible) */}
+                                            <div 
+                                                className="p-3 flex justify-between items-start"
+                                                onClick={() => hasDetails ? toggleEvent(idx) : (setExpandedEventIdx(idx), setActiveSubLocation(null))} 
+                                            >
+                                                <div className="pr-4">
+                                                    <div className={`text-xs font-bold mb-1 font-mono inline-block px-1.5 py-0.5 rounded ${
+                                                        isTransport ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500'
+                                                    }`}>
+                                                        {event.time}
+                                                    </div>
+                                                    <h3 className={`text-base font-bold ${
+                                                        isExpanded ? 'text-blue-700' : (isTransport ? 'text-blue-900' : 'text-slate-800')
+                                                    }`}>
+                                                        {event.title}
+                                                    </h3>
+                                                    {event.transport && (
+                                                        <div className={`text-xs mt-1.5 flex items-start font-medium ${
+                                                            isTransport ? 'text-blue-700' : 'text-slate-500'
+                                                        }`}>
+                                                            <span className="mr-1 mt-0.5">🚆</span>
+                                                            <span>{event.transport}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {/* Expand Arrow */}
+                                                {hasDetails && (
+                                                    <button className={`mt-1 p-1 rounded-full ${isTransport ? 'bg-blue-100 text-blue-500' : 'bg-slate-50 text-slate-400'}`}>
+                                                        <svg className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Card Details (Expandable) */}
+                                            {hasDetails && (
+                                                <div className={`expand-transition ${isTransport ? 'bg-blue-50/50' : 'bg-slate-50/50'} rounded-b-xl ${
+                                                    isExpanded ? 'max-h-[3000px] opacity-100 border-t border-slate-200/60' : 'max-h-0 opacity-0'
+                                                }`}>
+                                                    <div className="p-3">
+                                                        <ul className="space-y-1">
+                                                            {event.details.map((detail, dIdx) => (
+                                                                <DetailItem 
+                                                                    key={dIdx} 
+                                                                    item={detail} 
+                                                                    isSelectedMapLocation={activeSubLocation === detail.location}
+                                                                    onLocationClick={(loc) => setActiveSubLocation(loc)}
+                                                                />
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                    {/* Footer padding */}
+                    <div className="h-10"></div>
                 </div>
-            </li>
-            <li class="flex items-center space-x-3">
-                <span class="text-2xl">🎿</span>
-                <div>
-                    <p class="font-bold">第二天：全天滑雪</p>
-                    <p class="text-sm text-gray-500">專業教練指導教學</p>
-                </div>
-            </li>
-            <li class="flex items-center space-x-3">
-                <span class="text-2xl">♨️</span>
-                <div>
-                    <p class="font-bold">第三天：溫泉美食</p>
-                    <p class="text-sm text-gray-500">放鬆身心享受日式料理</p>
-                </div>
-            </li>
-        </ul>
-        <p class="mt-8 text-center text-gray-400 text-xs">這是您的專屬 GitHub Pages 網站</p>
-    </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
